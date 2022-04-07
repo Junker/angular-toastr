@@ -192,10 +192,18 @@
         _createOrGetContainer(options).then(function() {
           newToast.isOpened = true;
           if (options.newestOnTop) {
-            $animate.enter(newToast.el, container);
+            $animate.enter(newToast.el, container).then(function() {
+              newToast.scope.$applyAsync(function() {
+                newToast.scope.init();
+              });
+            });
           } else {
             var sibling = container[0].lastChild ? angular.element(container[0].lastChild) : null;
-            $animate.enter(newToast.el, container, sibling);
+            $animate.enter(newToast.el, container, sibling).then(function() {
+              newToast.scope.$applyAsync(function() {
+                newToast.scope.init();
+              });
+            });
           }
         });
       });
