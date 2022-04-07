@@ -192,14 +192,10 @@
         _createOrGetContainer(options).then(function() {
           newToast.isOpened = true;
           if (options.newestOnTop) {
-            $animate.enter(newToast.el, container).then(function() {
-              newToast.scope.init();
-            });
+            $animate.enter(newToast.el, container);
           } else {
             var sibling = container[0].lastChild ? angular.element(container[0].lastChild) : null;
-            $animate.enter(newToast.el, container, sibling).then(function() {
-              newToast.scope.init();
-            });
+            $animate.enter(newToast.el, container, sibling);
           }
         });
       });
@@ -350,6 +346,57 @@
   'use strict';
 
   angular.module('toastr')
+    .directive('progressBar', progressBar);
+
+  progressBar.$inject = ['toastrConfig'];
+
+  function progressBar(toastrConfig) {
+    return {
+      require: '^toast',
+      templateUrl: function() {
+        return toastrConfig.templates.progressbar;
+      },
+      link: linkFunction
+    };
+
+    function linkFunction(scope, element, attrs, toastCtrl) {
+      var intervalId, currentTimeOut, hideTime;
+
+      toastCtrl.progressBar = scope;
+
+      scope.start = function(duration) {
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
+
+        currentTimeOut = parseFloat(duration);
+        hideTime = new Date().getTime() + currentTimeOut;
+        intervalId = setInterval(updateProgress, 10);
+      };
+
+      scope.stop = function() {
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
+      };
+
+      function updateProgress() {
+        var percentage = ((hideTime - (new Date().getTime())) / currentTimeOut) * 100;
+        element.css('width', percentage + '%');
+      }
+
+      scope.$on('$destroy', function() {
+        // Failsafe stop
+        clearInterval(intervalId);
+      });
+    }
+  }
+}());
+
+(function() {
+  'use strict';
+
+  angular.module('toastr')
     .controller('ToastController', ToastController);
 
   function ToastController() {
@@ -470,56 +517,5 @@
   }
 }());
 
-(function() {
-  'use strict';
-
-  angular.module('toastr')
-    .directive('progressBar', progressBar);
-
-  progressBar.$inject = ['toastrConfig'];
-
-  function progressBar(toastrConfig) {
-    return {
-      require: '^toast',
-      templateUrl: function() {
-        return toastrConfig.templates.progressbar;
-      },
-      link: linkFunction
-    };
-
-    function linkFunction(scope, element, attrs, toastCtrl) {
-      var intervalId, currentTimeOut, hideTime;
-
-      toastCtrl.progressBar = scope;
-
-      scope.start = function(duration) {
-        if (intervalId) {
-          clearInterval(intervalId);
-        }
-
-        currentTimeOut = parseFloat(duration);
-        hideTime = new Date().getTime() + currentTimeOut;
-        intervalId = setInterval(updateProgress, 10);
-      };
-
-      scope.stop = function() {
-        if (intervalId) {
-          clearInterval(intervalId);
-        }
-      };
-
-      function updateProgress() {
-        var percentage = ((hideTime - (new Date().getTime())) / currentTimeOut) * 100;
-        element.css('width', percentage + '%');
-      }
-
-      scope.$on('$destroy', function() {
-        // Failsafe stop
-        clearInterval(intervalId);
-      });
-    }
-  }
-}());
-
-angular.module("toastr").run(["$templateCache", function($templateCache) {$templateCache.put("directives/progressbar/progressbar.html","<div class=\"toast-progress\"></div>\n");
-$templateCache.put("directives/toast/toast.html","<div class=\"{{toastClass}} {{toastType}}\" ng-click=\"tapToast()\">\n  <div ng-switch on=\"allowHtml\">\n    <div ng-switch-default ng-if=\"title\" class=\"{{titleClass}}\" aria-label=\"{{title}}\">{{title}}</div>\n    <div ng-switch-default class=\"{{messageClass}}\" aria-label=\"{{message}}\">{{message}}</div>\n    <div ng-switch-when=\"true\" ng-if=\"title\" class=\"{{titleClass}}\" ng-bind-html=\"title\"></div>\n    <div ng-switch-when=\"true\" class=\"{{messageClass}}\" ng-bind-html=\"message\"></div>\n  </div>\n  <progress-bar ng-if=\"progressBar\"></progress-bar>\n</div>\n");}]);
+angular.module("toastr").run(["$templateCache", function($templateCache) {$templateCache.put("/directives/toast/toast.html","<div class=\"{{toastClass}} {{toastType}}\" ng-click=\"tapToast()\">\n  <div ng-switch on=\"allowHtml\">\n    <div ng-switch-default ng-if=\"title\" class=\"{{titleClass}}\" aria-label=\"{{title}}\">{{title}}</div>\n    <div ng-switch-default class=\"{{messageClass}}\" aria-label=\"{{message}}\">{{message}}</div>\n    <div ng-switch-when=\"true\" ng-if=\"title\" class=\"{{titleClass}}\" ng-bind-html=\"title\"></div>\n    <div ng-switch-when=\"true\" class=\"{{messageClass}}\" ng-bind-html=\"message\"></div>\n  </div>\n  <progress-bar ng-if=\"progressBar\"></progress-bar>\n</div>\n");
+$templateCache.put("/directives/progressbar/progressbar.html","<div class=\"toast-progress\"></div>\n");}]);
