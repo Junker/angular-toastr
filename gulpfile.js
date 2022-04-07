@@ -52,7 +52,10 @@ gulp.task('scripts-prod', function() {
 gulp.task('template', function() {
   return gulp.src('src/**/*.html')
     .pipe(ngTemplates({
-      module: 'toastr'
+      module: 'toastr',
+      transformUrl: function(url) {
+        return url.replace(/^\/+/g, '');
+      }
     }))
     .pipe(rename('toastr.tpl.js'))
     .pipe(gulp.dest('gen'));
