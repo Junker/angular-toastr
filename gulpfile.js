@@ -49,15 +49,6 @@ gulp.task('scripts-prod', function() {
     .pipe(gulp.dest('dist'));
 });
 
-gulp.task('scripts-prod-tpls', ['template'], function() {
-  return gulp.src(['src/toastr.js', 'src/**/*.js', 'gen/toastr.tpl.js'])
-    .pipe(concat('angular-toastr.tpls.js'))
-    .pipe(gulp.dest('dist'))
-    .pipe(uglify())
-    .pipe(rename('angular-toastr.tpls.min.js'))
-    .pipe(gulp.dest('dist'));
-});
-
 gulp.task('template', function() {
   return gulp.src('src/**/*.html')
     .pipe(ngTemplates({
@@ -66,6 +57,16 @@ gulp.task('template', function() {
     .pipe(rename('toastr.tpl.js'))
     .pipe(gulp.dest('gen'));
 });
+
+gulp.task('scripts-prod-tpls', gulp.series('template', function() {
+  return gulp.src(['src/toastr.js', 'src/**/*.js', 'gen/toastr.tpl.js'])
+    .pipe(concat('angular-toastr.tpls.js'))
+    .pipe(gulp.dest('dist'))
+    .pipe(uglify())
+    .pipe(rename('angular-toastr.tpls.min.js'))
+    .pipe(gulp.dest('dist'));
+}));
+
 
 gulp.task('watch', function() {
   gulp.watch('src/**/*.js', ['lint', 'scripts-dev']);
@@ -77,6 +78,6 @@ gulp.task('clean', function(cb) {
   del(['dist', 'gen'], cb);
 });
 
-gulp.task('default', ['less-dev', 'scripts-dev', 'template', 'watch']);
-gulp.task('production', ['less-prod', 'scripts-prod', 'scripts-prod-tpls']);
-gulp.task('travis', ['less-dev', 'scripts-dev', 'template']);
+gulp.task('default', gulp.series('less-dev', 'scripts-dev', 'template', 'watch'));
+gulp.task('production', gulp.series('less-prod', 'scripts-prod', 'scripts-prod-tpls'));
+gulp.task('travis', gulp.series('less-dev', 'scripts-dev', 'template'));
